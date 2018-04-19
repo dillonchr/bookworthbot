@@ -3,59 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,user-scalable=0,initial-scale=1">
+    <meta name="theme-color" content="#0093E9">
     <title>Bookworth</title>
+    <style type="text/css">
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            font-size: 16px;
+            margin: 0;
+            padding: 0.5rem;
+        }
+        input {
+            border: solid 1px #eee;
+            display: block;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            width: 100%;
+        }
+        .buttons {
+            display: flex;
+            width: 100%;
+        }
+        .buttons button {
+            background: forestgreen;
+            border: none;
+            color: white;
+            display: block;
+            flex-grow: 1;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 1rem;
+            text-align: center;
+        }
+        .buttons button#clear {
+            background: #ccc;
+            border-right: solid 2px white;
+            color: #333;
+        }
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .results p {
+            flex-basis: 100%;
+        }
+        .results .average,
+        .results .confidence,
+        .results .ebay-sold,
+        .results .ebay-live {
+            flex-basis: 50%;
+        }
+        .results .average,
+        .results .confidence,
+        .results .eight-ball {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .results .zeroed,
+        .results .zeroed strong {
+            color: #bbb;
+        }
+    </style>
 </head>
 <body>
 <form>
     <input id="title" data-lpignore="true" placeholder="Title">
-    <input id="author" data-lpignore="true"  placeholder="Author">
-    <input id="publisher" data-lpignore="true"  placeholder="Publisher">
-    <button id="go">GO</button>
+    <input id="author" data-lpignore="true" placeholder="Author">
+    <input id="publisher" data-lpignore="true" placeholder="Publisher">
+    <div class="buttons">
+        <button type="reset" id="clear" tabindex="4">Reset</button>
+        <button id="go" tabindex="3">Should I?</button>
+    </div>
 </form>
-<h1></h1>
-<p>Total Average: <span id="avg"></span></p>
-<p>ABE: <span id="abe"></span></p>
-<p>ebay Sold: <span id="sold"></span></p>
-<p>ebay Live: <span id="ebay"></span></p>
-<p>etsy: <span id="etsy"></span></p>
-<p>Confidence: <span id="conf"></span></p>
+<div class="results">
+    <p class="average">~ $ <span id="avg">31.79</span></p>
+    <p class="confidence"><span id="conf">33.33%</span></p>
+    <p class="abe">
+        <strong>Abe</strong>
+        <span id="abe">33.26</span>
+    </p>
+    <p class="ebay-sold zeroed">
+        <strong>ebay Sold</strong>
+        <span id="sold">0.00</span>
+    </p>
+    <p class="ebay-live zeroed">
+        <strong>ebay Live</strong>
+        <span id="ebay">0.00</span>
+    </p>
+    <p class="etsy">
+        <strong>Etsy</strong>
+        <span id="etsy">14.93</span>
+    </p>
+    <p class="eight-ball">MAYBE</p>
+</div>
 <script>
-    function getVal(id) {
-        return encodeURIComponent(document.getElementById(id).value);
-    }
+    const form = document.querySelector('form');
+    const getVal = id => encodeURIComponent(document.getElementById(id).value);
+    const getSearchUrl = () => `/?title=${getVal('title')}&author=${getVal('author')}&publisher=${getVal('publisher')}`;
+    const showPrice = (id, price) => {
+        const elem = document.getElementById(id);
+        elem.innerText = price.toFixed(2)
+        elem.classList.toggle('zeroed', price === 0);
+    };
+    const setConfidence = conf => document.getElementById('conf').innerText = `${conf.toFixed(2)}%`;
+    const setShouldBuy = val => {
+        document.querySelector('.eight-ball').innerText = val > 1 ? 'YES' : val === 0 ? 'NO' : 'MAYBE';
+        document.querySelector('[name="theme-color"]').setAttribute('content', val > 1 ? '#16A085' : val === 0 ? '#FF0000' : '#FFE53B');
+    };
+    const setSubmitButtonText = text => document.getElementById('go').innerText = text;
 
-    function getSearchUrl() {
-        return '/?title=' + getVal('title') + '&author=' + getVal('author') + '&publisher=' + getVal('publisher');
-    }
+    form
+        .addEventListener('submit', e => {
+            e.preventDefault();
+            setSubmitButtonText('...');
+            fetch(getSearchUrl())
+                .then(r => r.json())
+                .then(([shouldBuy, abe, ebaySold, ebayLive, etsy, avg, conf]) => {
+                    setShouldBuy(shouldBuy);
+                    showPrice('avg', avg);
+                    showPrice('abe', abe);
+                    showPrice('sold', ebaySold);
+                    showPrice('ebay', ebayLive);
+                    showPrice('etsy', etsy);
+                    setConfidence(conf);
+                    setSubmitButtonText('Should I?');
+                });
+        });
 
-    function runSearch() {
-        fetch(getSearchUrl())
-            .then(function(r) {
-                return r.json();
-            })
-            .then(function(results) {
-                var shouldBuy = results[0];
-                var abe = results[1];
-                var ebaySold = results[2];
-                var ebayLive = results[3];
-                var etsy = results[4];
-                var avg = results[5];
-                var conf = results[6];
-                document.querySelector('h1').innerText = shouldBuy > 1 ? 'YES' : shouldBuy === 0 ? 'NO' : 'MAYBE';
-                document.getElementById('avg').innerText = avg.toFixed(2);
-                document.getElementById('abe').innerText = abe.toFixed(2);
-                document.getElementById('sold').innerText = ebaySold.toFixed(2);
-                document.getElementById('ebay').innerText = ebayLive.toFixed(2);
-                document.getElementById('etsy').innerText = etsy.toFixed(2);
-                document.getElementById('conf').innerText = conf.toFixed(2) + '%';
-            });
-    }
-
-    document.querySelector('form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        runSearch();
-        return false;
-    });
+    document.getElementById('clear')
+        .addEventListener('click', e => {
+            e.preventDefault();
+            form.reset();
+            document.getElementById('title').focus();
+        });
 </script>
 </body>
 </html>
