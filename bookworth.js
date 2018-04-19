@@ -25,7 +25,13 @@ const allPricesByYears = listings => fixedYears(listings)
     }, {});
 
 const averagePrices = prices => prices.reduce((s, c) => s + parseFloat(c), 0) / prices.length;
-const listingHasYearOrPub = (listing, years, publisher) => years.some(y => listing.about.includes(y)) || listing.about.toLowerCase().includes(publisher.toLowerCase());
+const listingHasYearOrPub = (listing, years, publisher) => {
+    try {
+        return years.some(y => listing.about.includes(y)) || listing.about.toLowerCase().includes(publisher.toLowerCase());
+    } catch (ignore) {
+        return false;
+    }
+};
 
 
 module.exports = searchQuery => {

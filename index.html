@@ -105,7 +105,7 @@
     const getSearchUrl = () => `/?title=${getVal('title')}&author=${getVal('author')}&publisher=${getVal('publisher')}`;
     const showPrice = (id, price) => {
         const elem = document.getElementById(id);
-        elem.innerText = price.toFixed(2)
+        elem.innerText = price.toFixed(2);
         elem.parentElement.classList.toggle('zeroed', price === 0);
     };
     const setConfidence = conf => document.getElementById('conf').innerText = `${conf.toFixed(2)}%`;
