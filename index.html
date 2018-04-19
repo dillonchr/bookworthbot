@@ -106,7 +106,7 @@
     const showPrice = (id, price) => {
         const elem = document.getElementById(id);
         elem.innerText = price.toFixed(2)
-        elem.classList.toggle('zeroed', price === 0);
+        elem.parentElement.classList.toggle('zeroed', price === 0);
     };
     const setConfidence = conf => document.getElementById('conf').innerText = `${conf.toFixed(2)}%`;
     const setShouldBuy = val => {
