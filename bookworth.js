@@ -71,7 +71,7 @@ module.exports = searchQuery => {
             const avgEtsyPrice = averagePrices(etsys.map(b => b.price)) || 0;
             const confidenceRating = ((abes.length + ebays.length + etsys.length) / 150 * 100).toFixed(2) + '%';
             const allPrices = abes.concat(soldListings).concat(etsys).map(b => b.price);
-            const avg = averagePrices(allPrices);
-            return [avg > 100 ? 2 : avg > 15 ? 1 : 0, avgAbePrice.toFixed(2), avgSoldPrice.toFixed(2), avgLivePrice.toFixed(2), avgEtsyPrice.toFixed(2), avg.toFixed(2), confidenceRating.replace(/%/, '')].map(n => parseFloat(n));
+            const avg = averagePrices(allPrices) || 0;
+            return [avg > 100 ? 2 : avg > 15 ? 1 : 0, avgAbePrice, avgSoldPrice, avgLivePrice, avgEtsyPrice, avg, parseFloat(confidenceRating.replace(/%/, ''))].map(n => Math.round(n * 100) / 100);
         });
 };
