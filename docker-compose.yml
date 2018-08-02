@@ -3,5 +3,6 @@ version: '2'
 services:
   bot:
     build: .
+    restart: unless-stopped
     ports:
       - 7708:3000
