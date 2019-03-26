@@ -92,6 +92,10 @@ const getYearsWorthIt = (pricesByYears) => {
         .slice(0, 3);
 };
 
+const toDisplay = (n) => {
+    return Math.round(n * 100) / 100;
+};
+
 module.exports = searchQuery => {
     if (!searchQuery) {
         return null;
@@ -118,12 +122,12 @@ module.exports = searchQuery => {
 
             return {
                 shouldBuy: avg > 100 ? 2 : avg > 15 ? 1 : 0,
-                avgAbePrice: Math.round(avgAbePrice * 100) / 100,
-                avgSoldPrice: Math.round(avgSoldPrice * 100) / 100,
-                avgLivePrice: Math.round(avgLivePrice * 100) / 100,
-                avgEtsyPrice: Math.round(avgEtsyPrice * 100) / 100,
-                avg: Math.round(avg * 100) / 100,
-                confidence: Math.round(parseFloat(confidenceRating.replace(/%/, '')) * 100) / 100
+                avgAbePrice: toDisplay(avgAbePrice),
+                avgSoldPrice: toDisplay(avgSoldPrice),
+                avgLivePrice: toDisplay(avgLivePrice),
+                avgEtsyPrice: toDisplay(avgEtsyPrice),
+                avg: toDisplay(avg),
+                confidence: toDisplay(parseFloat(confidenceRating.replace(/%/, '')))
             };
         });
 };
