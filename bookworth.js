@@ -6,7 +6,7 @@ const findYear = input => {
     return matches && matches.length && matches.sort().reverse().find(n => n <= (new Date().getFullYear()));
 };
 
-const fixedYears = abeResults => console.log(abeResults, '\n\n\n\n\n') || abeResults
+const fixedYears = abeResults => abeResults
     .map(listing => {
         const interpretedYear = findYear(listing.about);
         if (interpretedYear && interpretedYear > listing.year) {
