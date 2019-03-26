@@ -1,11 +1,12 @@
-const bookmancy = require('bookmancy');
+const EBAY_API_KEY='DillonCh-4ce2-442c-b779-8d0905e2d5e4';
+const bookmancy = require('@dillonchr/bookmancy');
 const etsy = require('./etsy');
 const findYear = input => {
     const matches = input.match(/\d{4}/g);
     return matches && matches.length && matches.sort().reverse().find(n => n <= (new Date().getFullYear()));
 };
 
-const fixedYears = abeResults => abeResults
+const fixedYears = abeResults => console.log(abeResults, '\n\n\n\n\n') || abeResults
     .map(listing => {
         const interpretedYear = findYear(listing.about);
         if (interpretedYear && interpretedYear > listing.year) {
@@ -15,7 +16,7 @@ const fixedYears = abeResults => abeResults
     })
     .filter(l => !!l.year);
 
-const allPricesByYears = listings => fixedYears(listings)
+const allPricesByYears = listings => fixedYears(listings || [])
     .reduce((years, book) => {
         if (!years[book.year]) {
             years[book.year] = [];
@@ -33,19 +34,42 @@ const listingHasYearOrPub = (listing, years, publisher) => {
     }
 };
 
+const searchEbay = (query) => {
+    return new Promise((res, rej) => {
+        bookmancy.ebay(query, (err, results) => {
+            if (err) {
+                res([]);
+            }
+            res(results ? results.results : []);
+        });
+    });
+};
+
+const searchAbe = (query) => {
+    return new Promise((res, rej) => {
+        bookmancy.abe(query, (err, results) => {
+            if (err) {
+                res([]);
+            }
+            res(results ? results.results : []);
+        });
+    });
+};
+
 
 module.exports = searchQuery => {
+    if (!searchQuery) {
+        return null;
+    }
     const query = searchQuery.title + ' ' + searchQuery.author;
 
     return Promise.all([
-        bookmancy.abe.search(searchQuery),
-        Promise.all([
-            bookmancy.ebay.searchLiveListings(query).catch(() => []),
-            bookmancy.ebay.searchSoldListings(query).catch(() => [])
-        ]).then(r => r.reduce((s, c) => s.concat(c), [])),
+        searchAbe(searchQuery),
+        searchEbay({...searchQuery, live: 1}),
+        searchEbay({...searchQuery, sold: 1}),
         etsy(query)
     ])
-        .then(([results, ebayResults, etsyResults]) => {
+        .then(([results, soldEbayResults, liveEbayResults, etsyResults]) => {
             const pricesByYears = allPricesByYears(results);
             const yearsWorthIt = Object.entries(pricesByYears)
                 .sort((a, b) => {
@@ -55,21 +79,19 @@ module.exports = searchQuery => {
                 })
                 .map(([year]) => parseInt(year))
                 .slice(0, 3);
-            const abes = results.filter(b => yearsWorthIt.includes(b.year) || yearsWorthIt.includes(parseInt(b.year)));
+            const abes = results.filter(b => b.price !== '???' && (yearsWorthIt.includes(b.year) || yearsWorthIt.includes(parseInt(b.year))));
             const avgAbePrice = averagePrices(abes.map(b => b.price)) || 0;
-            const ebays = ebayResults
-                .filter(e => listingHasYearOrPub(e, yearsWorthIt, searchQuery.publisher));
-            const soldListings = ebays.filter(b => b.sold);
+            const soldListings = soldEbayResults.filter(b => listingHasYearOrPub(b, yearsWorthIt, searchQuery.publisher));
             const highestFeasiblePrice = abes.concat(soldListings)
                 .map(b => b.price)
                 .reduce((max, curr) => max < curr ? curr : max, 0) || 0;
-            const liveListings = ebays.filter(b => !b.sold && b.price < highestFeasiblePrice);
+            const liveListings = liveEbayResults.filter(b => b.price < highestFeasiblePrice && listingHasYearOrPub(b, yearsWorthIt, searchQuery.publisher));
             const avgSoldPrice = averagePrices(soldListings.map(b => b.price)) || 0;
             const avgLivePrice = averagePrices(liveListings.map(b => b.price)) || 0;
             const etsys = etsyResults
                 .filter(e => listingHasYearOrPub(e, yearsWorthIt, searchQuery.publisher));
             const avgEtsyPrice = averagePrices(etsys.map(b => b.price)) || 0;
-            const confidenceRating = ((abes.length + ebays.length + etsys.length) / 150 * 100).toFixed(2) + '%';
+            const confidenceRating = ((abes.length + soldListings.length + liveListings.length + etsys.length) / 150 * 100).toFixed(2) + '%';
             const allPrices = abes.concat(soldListings).concat(etsys).map(b => b.price);
             const avg = averagePrices(allPrices) || 0;
             return [avg > 100 ? 2 : avg > 15 ? 1 : 0, avgAbePrice, avgSoldPrice, avgLivePrice, avgEtsyPrice, avg, parseFloat(confidenceRating.replace(/%/, ''))].map(n => Math.round(n * 100) / 100);
