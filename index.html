@@ -121,14 +121,14 @@
             setSubmitButtonText('...');
             fetch(getSearchUrl())
                 .then(r => r.json())
-                .then(([shouldBuy, abe, ebaySold, ebayLive, etsy, avg, conf]) => {
+                .then(({shouldBuy, avgAbePrice, avgSoldPrice, avgLivePrice, avgEtsyPrice, avg, confidence}) => {
                     setShouldBuy(shouldBuy);
                     showPrice('avg', avg);
-                    showPrice('abe', abe);
-                    showPrice('sold', ebaySold);
-                    showPrice('ebay', ebayLive);
-                    showPrice('etsy', etsy);
-                    setConfidence(conf);
+                    showPrice('abe', avgAbePrice);
+                    showPrice('sold', avgSoldPrice);
+                    showPrice('ebay', avgLivePrice);
+                    showPrice('etsy', avgEtsyPrice);
+                    setConfidence(confidence);
                     setSubmitButtonText('Should I?');
                 });
         });

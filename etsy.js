@@ -1,23 +1,24 @@
-const {JSDOM} = require('jsdom');
+const domget = require('@dillonchr/domget');
 const toURL = search => `https://www.etsy.com/search/vintage/books-movies-and-music/books?q=${encodeURIComponent(search)}&explicit=1`;
 
 module.exports = query => {
-    return JSDOM.fromURL(toURL(query))
-        .then(dom => {
-            const results = Array.from(dom.window.document.querySelectorAll('.listing-link'));
+    return new Promise((res) => {
+        domget(toURL(query), (err, dom) => {
+            if (err || !dom) {
+                return res([]);
+            }
+            const results = Array.from(dom.querySelectorAll('.listing-link'));
 
             if (results.length) {
-                return results
+                return res(results
                     .filter(a => a.querySelector('.currency-value'))
                     .map(a => ({
                         about: a.getAttribute('title'),
                         price: parseFloat(a.querySelector('.currency-value').textContent)
-                    }));
+                    })));
             }
-
-            return [];
-        })
-        .catch(() => {
-            return [];
+            res([]);
         });
+    });
 };
+

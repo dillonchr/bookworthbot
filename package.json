@@ -10,6 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@dillonchr/bookmancy": "^2.0.1",
-    "jsdom": "^11.8.0"
+    "@dillonchr/domget": "^1.0.0"
   }
 }
