@@ -13,8 +13,8 @@ module.exports = query => {
                 return res(results
                     .filter(a => a.querySelector('.currency-value'))
                     .map(a => ({
-                        about: a.getAttribute('title'),
-                        price: parseFloat(a.querySelector('.currency-value').textContent)
+                        about: a.attributes.title,
+                        price: parseFloat(a.querySelector('.currency-value').rawText)
                     })));
             }
             res([]);
