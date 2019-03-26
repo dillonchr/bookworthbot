@@ -16,5 +16,8 @@ module.exports = query => {
             }
 
             return [];
+        })
+        .catch(() => {
+            return [];
         });
 };
