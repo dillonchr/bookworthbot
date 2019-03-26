@@ -1,4 +1,4 @@
-const EBAY_API_KEY='DillonCh-4ce2-442c-b779-8d0905e2d5e4';
+//  must include env var of EBAY_API_KEY
 const bookmancy = require('@dillonchr/bookmancy');
 const etsy = require('./etsy');
 const findYear = input => {
